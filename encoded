@@ -1,0 +1,52 @@
+import cv2
+import face_recognition
+import os
+import pickle
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+from firebase_admin import storage
+
+cred = credentials.Certificate("serviceaccountkey.json")
+firebase_admin.initialize_app(cred,{
+    'databaseURL':"https://attendancefacerealtime-default-rtdb.firebaseio.com/",
+    'storageBucket':"attendancefacerealtime.appspot.com"
+})
+
+folderpath = 'images'
+pathlist = os.listdir(folderpath)
+print(pathlist)
+imgglist = []
+stdid = []
+for path in pathlist:
+    imgglist.append(cv2.imread(os.path.join(folderpath, path)))
+    #print(path)
+    stdid.append(os.path.splitext(path)[0])
+    #print(stdid)
+    filename = f'{folderpath}/{path}'
+    bucket = storage.bucket()
+    blob = bucket.blob(filename)
+    blob.upload_from_filename(filename)
+
+    #print(len(imgglist))
+
+    def findencode(imglist) :
+        endcoded = []
+        for img in imglist:
+            img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+            encode = face_recognition.face_encodings(img)[0]
+            endcoded.append(encode)
+
+        return endcoded
+
+
+print("processing encode")
+encodedknown = findencode(imgglist)
+encodelistknownid = [encodedknown,stdid]
+print("completed encode")
+
+file = open("encodedfile",'wb')
+pickle.dump(encodelistknownid,file)
+file.close()
+print("file save")
+
