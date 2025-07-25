@@ -23,5 +23,4 @@ A **real-time face recognition-based attendance system** built using Python. Thi
 - Firebase Realtime Database
 - Firebase Storage
 
-## 📁 Folder Structure
 
